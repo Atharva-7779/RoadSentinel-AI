@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+yolo-venv/
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Models and generated files
+*.pt
+*.onnx
+*.tflite
+uploads/
+runs/
+
+# Mac
+.DS_Store
+
+# Logs
+*.log

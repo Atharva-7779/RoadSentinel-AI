@@ -1,0 +1,184 @@
+/* ── Overlay ─────────────────────────────────────────────────────────────── */
+.cam-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(4, 8, 18, 0.88);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.cam-modal {
+  width: 100%; max-width: 680px;
+  background: #0c1423;
+  border: 1px solid #2a3d55;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  max-height: 92vh;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.cam-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #1e2d40;
+  flex-shrink: 0;
+}
+.cam-eyebrow { display: block; font-size: 9px; color: #52adff; letter-spacing: 1.2px; font-weight: 700; margin-bottom: 3px; }
+.cam-header h3 { margin: 0; font-size: 16px; }
+.cam-header-right { display: flex; align-items: center; gap: 10px; }
+
+/* Mode toggle */
+.cam-mode-toggle {
+  display: flex; border: 1px solid #2a3d55; border-radius: 7px; overflow: hidden;
+}
+.cam-mode-toggle button {
+  padding: 5px 14px; font-size: 11px; border: none;
+  background: transparent; color: #8494aa; cursor: pointer;
+}
+.cam-mode-toggle button.active { background: #173657; color: #eaf0fa; }
+
+.cam-close {
+  width: 30px; height: 30px; border-radius: 7px;
+  border: 1px solid #2a3d55; background: #111e30;
+  color: #8494aa; font-size: 13px; cursor: pointer;
+  display: grid; place-items: center;
+}
+.cam-close:hover { background: #38202a; color: #ff8792; border-color: #75404a; }
+
+/* ── Idle / Error states ─────────────────────────────────────────────────── */
+.cam-idle, .cam-error {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 16px;
+  padding: 48px 24px; text-align: center;
+}
+.cam-idle-icon { font-size: 48px; color: #2a4a6a; }
+.cam-idle p, .cam-error p { color: #8494aa; font-size: 13px; max-width: 380px; line-height: 1.6; margin: 0; }
+
+.cam-error-icon { font-size: 36px; color: #ff8c42; }
+.cam-error p { color: #ffb347; }
+.cam-error-actions { display: flex; gap: 10px; }
+
+/* Spinner */
+.cam-spinner {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 3px solid #1e2d40; border-top-color: #52adff;
+  animation: cam-spin 0.8s linear infinite;
+}
+@keyframes cam-spin { to { transform: rotate(360deg); } }
+
+/* ── Live view ───────────────────────────────────────────────────────────── */
+.cam-live { display: flex; flex-direction: column; }
+
+.cam-video-wrap {
+  position: relative; background: #000; overflow: hidden;
+  max-height: 52vh;
+}
+.cam-video {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover; max-height: 52vh;
+}
+
+/* REC badge */
+.cam-rec-badge {
+  position: absolute; top: 12px; left: 12px;
+  background: rgba(0,0,0,0.65); color: #ff5c6a;
+  font-size: 11px; font-weight: 700; padding: 4px 10px;
+  border-radius: 5px; letter-spacing: 0.5px;
+}
+
+/* Controls bar */
+.cam-controls {
+  display: flex; align-items: center; justify-content: center;
+  gap: 20px; padding: 18px 20px;
+  background: #080f1b; border-top: 1px solid #1a2a3a;
+}
+
+/* Generic button */
+.cam-btn {
+  padding: 8px 18px; border-radius: 8px;
+  border: 1px solid #2a3d55; background: #111e30;
+  color: #c0d0e0; font-size: 12px; cursor: pointer;
+}
+.cam-btn:hover { border-color: #52adff; color: #eaf0fa; }
+.cam-btn-primary {
+  background: #1558c0; border-color: #2070e0; color: #fff;
+}
+.cam-btn-primary:hover { background: #1a6ae0; }
+
+/* Icon button (switch / power) */
+.cam-btn-icon {
+  width: 44px; height: 44px; padding: 0; border-radius: 50%;
+  font-size: 18px; display: grid; place-items: center;
+}
+
+/* Shutter / capture button */
+.cam-btn-capture {
+  width: 64px; height: 64px; padding: 0; border-radius: 50%;
+  border: 3px solid #fff; background: transparent;
+  display: grid; place-items: center; cursor: pointer;
+}
+.cam-btn-capture:hover { border-color: #52adff; }
+
+.cam-shutter {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: #fff; display: block;
+  transition: transform 0.1s;
+}
+.cam-btn-capture:active .cam-shutter { transform: scale(0.88); }
+
+/* Record button */
+.cam-btn-rec { border-color: #ff5c6a; }
+.cam-rec-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #ff5c6a; display: block;
+}
+
+/* Stop button */
+.cam-btn-stop { border-color: #ff5c6a; background: rgba(255,92,106,0.12); }
+.cam-stop-sq {
+  width: 22px; height: 22px; border-radius: 4px;
+  background: #ff5c6a; display: block;
+}
+
+.cam-hint {
+  font-size: 10px; color: #5a6a7a; text-align: center;
+  padding: 8px 20px 14px; margin: 0;
+}
+
+/* ── Captured / recorded ─────────────────────────────────────────────────── */
+.cam-captured {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 14px; padding: 20px;
+  overflow-y: auto;
+}
+.cam-captured-label {
+  font-size: 10px; color: #52adff; letter-spacing: 0.8px;
+  font-weight: 600; margin: 0; align-self: flex-start;
+}
+.cam-captured-img {
+  width: 100%; border-radius: 10px;
+  border: 1px solid #2a3d55; max-height: 50vh; object-fit: contain;
+  background: #080f1b;
+}
+.cam-captured-actions { display: flex; gap: 12px; width: 100%; }
+.cam-captured-actions .cam-btn { flex: 1; text-align: center; }
+
+/* Video note */
+.cam-video-note {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px 14px; background: #1a1a0a;
+  border: 1px solid #4a4a20; border-radius: 8px;
+  font-size: 11px; color: #c8c060; width: 100%;
+}
+.cam-video-note span:first-child { flex-shrink: 0; font-size: 14px; }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .cam-modal { border-radius: 12px; }
+  .cam-controls { gap: 14px; padding: 14px; }
+  .cam-btn-capture { width: 56px; height: 56px; }
+  .cam-shutter { width: 44px; height: 44px; }
+  .cam-captured-actions { flex-direction: column; }
+}
