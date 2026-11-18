@@ -1,7 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import "./FailurePrediction.css";
 
-const API_BASE = "http://127.0.0.1:5001";
+const API_BASE = (
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:5001"
+).replace(/\/$/, "");
 
 const DAMAGE_LABELS = {
   pothole: "Pothole",

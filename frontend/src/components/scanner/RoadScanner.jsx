@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import "./RoadScanner.css";
 import CameraCapture from "./CameraCapture";
 
-const API_BASE = "http://127.0.0.1:5001";
+const API_BASE = (
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:5001"
+).replace(/\/$/, "");
 
 const SEVERITY_COLOR = { High: "#ff5c6a", Medium: "#ffb347", Low: "#42d69a" };
 const DAMAGE_LABELS = {

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import "./App.css";
 import MapView from "./components/MapView";
@@ -6,7 +7,10 @@ import RoadIntelligence from "./components/RoadIntelligence";
 import FailurePrediction from "./components/FailurePrediction";
 import SafetyIntelligence from "./components/SafetyIntelligence";
 
-const API_BASE = "http://127.0.0.1:5001";
+// Local development + Render production API
+const API_BASE = (
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:5001"
+).replace(/\/$/, "");
 
 const navigation = [
   ["Overview", "◫"],
@@ -75,7 +79,9 @@ function App() {
 
       const formattedReports = data.reports.map((report) => ({
         ...report,
-        photo: report.photo ? `${API_BASE}${report.photo}` : null,
+        photo: report.photo
+          ? `${API_BASE}${report.photo}`
+          : null,
       }));
 
       setReports(formattedReports);
@@ -145,8 +151,6 @@ function App() {
         throw new Error(data.message || "Report submission failed.");
       }
 
-      // Backend may return the new report inside data.report.
-      // The fallback also supports APIs that return the report fields at the top level.
       const savedReport = data.report || data;
 
       setLatestReceipt({
@@ -159,9 +163,12 @@ function App() {
           savedReport.department || data.department || department,
         reportType:
           savedReport.reportType || data.reportType || reportType,
-        location: savedReport.location || data.location || location.trim(),
+        location:
+          savedReport.location || data.location || location.trim(),
         description:
-          savedReport.description ?? data.description ?? description.trim(),
+          savedReport.description ??
+          data.description ??
+          description.trim(),
         status: savedReport.status || data.status || "Received",
         demoSubmissionStatus:
           savedReport.demoSubmissionStatus ||
