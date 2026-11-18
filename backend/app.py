@@ -79,6 +79,26 @@ def initialize_database():
         )
     """)
 
+    # Citizen Reports - safe migration for demo department submission.
+    existing_report_columns = {
+        row[1] for row in connection.execute(
+            "PRAGMA table_info(citizen_reports)"
+        ).fetchall()
+    }
+
+    new_report_columns = {
+        "department": "TEXT",
+        "demo_submission_id": "TEXT",
+        "demo_submission_status": "TEXT",
+        "demo_submitted_at": "TEXT",
+    }
+
+    for column, column_type in new_report_columns.items():
+        if column not in existing_report_columns:
+            connection.execute(
+                f"ALTER TABLE citizen_reports ADD COLUMN {column} {column_type}"
+            )
+
     connection.execute("""
         CREATE TABLE IF NOT EXISTS ai_scan_results (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -617,7 +637,7 @@ def scan_road():
 
 
 # --------------------------------------------------
-# CITIZEN REPORTS - CREATE
+# CITIZEN REPORTS - CREATE (DEMO SUBMISSION ONLY)
 # --------------------------------------------------
 
 @app.route("/api/reports", methods=["POST"])
@@ -629,8 +649,16 @@ def create_report():
     )
 
     location = request.form.get("location")
-
     description = request.form.get("description", "")
+
+    department = request.form.get(
+        "department", "Municipal Corporation"
+    ).strip()
+
+    allowed_departments = [
+        "Municipal Corporation",
+        "PWD"
+    ]
 
     if not report_type or not location:
         return jsonify({
@@ -638,8 +666,13 @@ def create_report():
             "message": "Report type and location are required."
         }), 400
 
-    photo_name = None
+    if department not in allowed_departments:
+        return jsonify({
+            "success": False,
+            "message": "Invalid department selected."
+        }), 400
 
+    photo_name = None
     photo = request.files.get("photo")
 
     if photo and photo.filename:
@@ -650,37 +683,80 @@ def create_report():
                 "message": "Only JPG, JPEG, PNG and WEBP images are allowed."
             }), 400
 
-        extension = secure_filename(photo.filename).rsplit(".", 1)[1].lower()
+        safe_filename = secure_filename(photo.filename)
 
+        if "." not in safe_filename:
+            return jsonify({
+                "success": False,
+                "message": "Invalid image filename."
+            }), 400
+
+        extension = safe_filename.rsplit(".", 1)[1].lower()
         photo_name = f"{uuid.uuid4().hex}.{extension}"
-
         photo.save(UPLOAD_DIR / photo_name)
 
     created_at = datetime.now(timezone.utc).isoformat()
+    demo_submitted_at = datetime.now(timezone.utc).isoformat()
 
     connection = get_db()
 
-    cursor = connection.execute("""
-        INSERT INTO citizen_reports
-        (report_type, location, description, photo, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (
-        report_type,
-        location,
-        description,
-        photo_name,
-        "Received",
-        created_at
-    ))
+    try:
+        cursor = connection.execute("""
+            INSERT INTO citizen_reports (
+                report_type,
+                location,
+                description,
+                photo,
+                status,
+                created_at,
+                department,
+                demo_submission_status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            report_type,
+            location,
+            description,
+            photo_name,
+            "Received",
+            created_at,
+            department,
+            "SIMULATION_ONLY_NOT_SENT"
+        ))
 
-    report_id = cursor.lastrowid
+        report_id = cursor.lastrowid
+        demo_submission_id = (
+            f"DEMO-{datetime.now().strftime('%Y%m%d')}-{report_id:05d}"
+        )
 
-    connection.commit()
-    connection.close()
+        connection.execute("""
+            UPDATE citizen_reports
+            SET demo_submission_id = ?,
+                demo_submitted_at = ?
+            WHERE id = ?
+        """, (
+            demo_submission_id,
+            demo_submitted_at,
+            report_id
+        ))
+
+        connection.commit()
+
+    except Exception:
+        connection.rollback()
+        if photo_name:
+            try:
+                (UPLOAD_DIR / photo_name).unlink(missing_ok=True)
+            except OSError:
+                pass
+        raise
+
+    finally:
+        connection.close()
 
     return jsonify({
         "success": True,
-        "message": "Road report submitted successfully.",
+        "message": "Demo report recorded locally. Not sent to government.",
         "report": {
             "id": report_id,
             "reportType": report_type,
@@ -688,8 +764,14 @@ def create_report():
             "description": description,
             "photo": f"/uploads/{photo_name}" if photo_name else None,
             "status": "Received",
+            "department": department,
+            "demoSubmissionId": demo_submission_id,
+            "demoSubmissionStatus": "SIMULATION_ONLY_NOT_SENT",
+            "demoSubmittedAt": demo_submitted_at,
             "createdAt": created_at
-        }
+        },
+        "simulationOnly": True,
+        "notice": "This is a demonstration only. No report is sent to any government department."
     }), 201
 
 
@@ -702,35 +784,43 @@ def get_reports():
 
     connection = get_db()
 
-    rows = connection.execute("""
-        SELECT * FROM citizen_reports
-        ORDER BY id DESC
-    """).fetchall()
+    try:
+        rows = connection.execute("""
+            SELECT *
+            FROM citizen_reports
+            ORDER BY id DESC
+        """).fetchall()
 
-    connection.close()
+        reports = []
 
-    reports = []
+        for row in rows:
+            reports.append({
+                "id": row["id"],
+                "reportType": row["report_type"],
+                "location": row["location"],
+                "description": row["description"],
+                "photo": (
+                    f"/uploads/{row['photo']}"
+                    if row["photo"] else None
+                ),
+                "status": row["status"],
+                "department": row["department"],
+                "demoSubmissionId": row["demo_submission_id"],
+                "demoSubmissionStatus": row["demo_submission_status"],
+                "demoSubmittedAt": row["demo_submitted_at"],
+                "createdAt": row["created_at"]
+            })
 
-    for row in rows:
-
-        reports.append({
-            "id": row["id"],
-            "reportType": row["report_type"],
-            "location": row["location"],
-            "description": row["description"],
-            "photo": (
-                f"/uploads/{row['photo']}"
-                if row["photo"] else None
-            ),
-            "status": row["status"],
-            "createdAt": row["created_at"]
-        })
+    finally:
+        connection.close()
 
     return jsonify({
         "success": True,
         "count": len(reports),
-        "reports": reports
-    })
+        "reports": reports,
+        "simulationOnly": True,
+        "notice": "Simulation only. No report is sent to any government department."
+    }), 200
 
 
 # --------------------------------------------------
@@ -1305,3 +1395,4 @@ if __name__ == "__main__":
         port=5001,
         debug=True
     )
+
