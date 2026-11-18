@@ -27,13 +27,11 @@ UPLOAD_DIR = BASE_DIR / "uploads"
 INSTANCE_DIR = BASE_DIR / "instance"
 DATABASE = INSTANCE_DIR / "roadsentinel.db"
 
-MODEL_PATH = (
-    Path.home()
-    / "runs"
-    / "roadsentinel_v2"
-    / "road_v2_30epochs"
-    / "weights"
-    / "best.pt"
+MODEL_PATH = Path(
+    os.environ.get(
+        "MODEL_PATH",
+        str(BASE_DIR / "models" / "best.pt")
+    )
 )
 
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -1381,6 +1379,7 @@ def file_too_large(error):
     }), 413
 
 
+
 # --------------------------------------------------
 # INITIALIZE AND RUN
 # --------------------------------------------------
@@ -1389,10 +1388,10 @@ initialize_database()
 
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5001))
 
     app.run(
-        host="127.0.0.1",
-        port=5001,
-        debug=True
+        host="0.0.0.0",
+        port=port,
+        debug=False
     )
-
