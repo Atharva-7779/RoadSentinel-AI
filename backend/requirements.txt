@@ -6,3 +6,4 @@ opencv-python-headless==4.11.0.86
 torch==2.2.2
 torchvision==0.17.2
 ultralytics==8.4.198
+gunicorn==23.0.0
